@@ -8,7 +8,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Custom SOC Stylesheet -->
   <link rel="stylesheet" href="/static/css/soc.css">
@@ -28,10 +28,10 @@
       </div>
       <div>
         <div class="brand-title">
-          AEGIS // SHIELD <span class="brand-badge">SIH26106</span>
+          Aegis Intelligence <span class="brand-badge">SIH26106</span>
         </div>
-        <div style="font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px;">
-          EMAIL THREAT DETECTION & FORENSIC INTELLIGENCE PLATFORM
+        <div class="brand-subtitle">
+          Email Threat Detection & Forensic Platform
         </div>
       </div>
     </div>
@@ -75,9 +75,16 @@
       </a>
     </nav>
 
-    <div class="soc-telemetry-badge">
-      <div class="pulse-dot"></div>
-      <span id="soc-badge-text">SHIELD ACTIVE</span>
+    <div class="header-right-group">
+      <div class="soc-telemetry-badge">
+        <div class="pulse-dot"></div>
+        <span id="soc-badge-text">Shield Active</span>
+      </div>
+      <button class="theme-toggle-btn" id="btn-theme-toggle" type="button" title="Switch between Light and Dark Mode" aria-label="Toggle theme">
+        <svg class="icon-moon" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        <svg class="icon-sun" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <span class="theme-toggle-label">Dark</span>
+      </button>
     </div>
   </header>
 
@@ -159,8 +166,8 @@
           <div class="cyber-card" style="margin-bottom: 0;">
             <div class="card-header-soc">
               <div class="card-title-group">
-                <svg width="16" height="16" fill="none" stroke="var(--amber-core)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="card-title" style="color: #ffffff;">WHY IS THIS SUSPICIOUS?</span>
+                <svg width="16" height="16" fill="none" stroke="var(--color-warning)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="card-title">Why is this suspicious?</span>
               </div>
               <span style="font-size: 11px; color: var(--text-muted);">Plain English Summary</span>
             </div>
@@ -178,10 +185,10 @@
           <div class="cyber-card" style="margin-bottom: 0;">
             <div class="card-header-soc">
               <div class="card-title-group">
-                <svg width="16" height="16" fill="none" stroke="var(--emerald-core)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="card-title" style="color: #ffffff;">WHAT SHOULD I DO?</span>
+                <svg width="16" height="16" fill="none" stroke="var(--color-safe)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="card-title">What should I do?</span>
               </div>
-              <span style="font-size: 11px; color: var(--emerald-core);">Recommended Actions</span>
+              <span style="font-size: 11px; color: var(--color-safe);">Recommended Actions</span>
             </div>
             <div class="card-body-soc">
               <div id="simple-actions-container" class="action-checklist-container">
@@ -193,10 +200,10 @@
 
               <!-- Interactive Buttons Bar -->
               <div style="display: flex; gap: 10px; margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 14px; flex-wrap: wrap;">
-                <button class="btn-cyber-solid" id="btn-report-phishing" style="background: var(--crimson-core); color: #ffffff; font-size: 11px; font-weight: 700; padding: 7px 14px;">
+                <button class="btn-cyber-solid danger-btn" id="btn-report-phishing" style="font-size: 12px; font-weight: 600; padding: 7px 14px;">
                   &#x1f6a8; Report to IT Security
                 </button>
-                <button class="btn-cyber" id="btn-mark-safe" style="border-color: var(--emerald-core); color: var(--emerald-core); font-size: 11px; padding: 7px 14px;">
+                <button class="btn-cyber safe-btn" id="btn-mark-safe" style="font-size: 12px; padding: 7px 14px;">
                   &#x2713; Mark as Safe / Known Sender
                 </button>
               </div>
@@ -210,10 +217,10 @@
           <div class="cyber-card" style="margin-bottom: 0;">
             <div class="card-header-soc">
               <div class="card-title-group">
-                <svg width="16" height="16" fill="none" stroke="var(--cyan-core)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                <span class="card-title" style="color: #ffffff;">WHO DOES IT APPEAR TO COME FROM?</span>
+                <svg width="16" height="16" fill="none" stroke="var(--color-primary)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span class="card-title">Who does it appear to come from?</span>
               </div>
-              <span style="font-size: 11px; color: var(--cyan-core);">Identity Breakdown</span>
+              <span style="font-size: 11px; color: var(--color-primary);">Identity Breakdown</span>
             </div>
             <div class="card-body-soc">
               <div class="identity-contrast-grid">
@@ -223,11 +230,11 @@
                 </div>
                 <div class="identity-row">
                   <span class="identity-row-label">Actual Sender Address:</span>
-                  <span class="identity-row-value" id="simple-ident-email" style="font-family: var(--text-mono); color: var(--cyan-core);">--</span>
+                  <span class="identity-row-value" id="simple-ident-email" style="font-family: var(--text-mono); color: var(--color-primary);">--</span>
                 </div>
                 <div id="simple-ident-replyto-row" class="identity-row" style="display: none;">
-                  <span class="identity-row-label" style="color: var(--crimson-core);">Replies Secretly Go To:</span>
-                  <span class="identity-row-value" id="simple-ident-replyto" style="font-family: var(--text-mono); color: var(--crimson-core);">--</span>
+                  <span class="identity-row-label" style="color: var(--color-danger);">Replies Secretly Go To:</span>
+                  <span class="identity-row-value" id="simple-ident-replyto" style="font-family: var(--text-mono); color: var(--color-danger);">--</span>
                 </div>
                 <div id="simple-ident-explanation" class="identity-explanation-callout">
                   <span>&#9432;</span>
@@ -241,8 +248,8 @@
           <div class="cyber-card" style="margin-bottom: 0;">
             <div class="card-header-soc">
               <div class="card-title-group">
-                <svg width="16" height="16" fill="none" stroke="var(--violet-core)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                <span class="card-title" style="color: #ffffff;">WHERE DID THE EMAIL COME THROUGH?</span>
+                <svg width="16" height="16" fill="none" stroke="var(--color-info)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="card-title">Where did the email come through?</span>
               </div>
               <span style="font-size: 11px; color: var(--text-muted);">Simplified Transit Path</span>
             </div>
@@ -257,7 +264,7 @@
             <div class="card-header-soc">
               <div class="card-title-group">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                <span class="card-title" style="color: #ffffff;">RELATED SUSPICIOUS ACTIVITY</span>
+                <span class="card-title">Related suspicious activity</span>
               </div>
               <span style="font-size: 11px; color: var(--text-muted);">Network Intel</span>
             </div>
@@ -310,8 +317,8 @@
               </div>
               <button class="btn-cyber" id="btn-copy-headers" style="padding: 4px 10px; font-size: 10px;">Copy Headers</button>
             </div>
-            <div class="card-body-soc" style="padding: 0;">
-              <pre id="simple-raw-headers-pre" style="max-height: 220px; overflow-y: auto; font-family: var(--text-mono); font-size: 11px; padding: 14px; background: rgba(0,0,0,0.4); color: var(--cyan-core); margin: 0; white-space: pre-wrap; word-break: break-all;"></pre>
+            <div class="card-body-soc" style="padding: 14px;">
+              <pre id="simple-raw-headers-pre" class="raw-headers-pre"></pre>
             </div>
           </div>
 
@@ -596,18 +603,18 @@
   <div id="eml-modal" class="modal-backdrop">
     <div class="modal-window">
       <div class="modal-header">
-        <span style="font-weight: 700; color: #ffffff;">ANALYZE CUSTOM EMAIL (.EML)</span>
+        <span style="font-weight: 700; color: var(--text-primary);">Analyze Custom Email (.eml)</span>
         <button id="btn-close-modal" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">&times;</button>
       </div>
       <div class="modal-body">
         <div class="dropzone" id="eml-dropzone">
           <input type="file" id="eml-file-input" accept=".eml,.txt" style="display:none;">
-          <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:8px;color:var(--cyan-core);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-          <div style="font-weight: 600; color: #fff;">Drop raw .eml file here or click to browse</div>
+          <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:8px;color:var(--color-primary);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+          <div style="font-weight: 600; color: var(--text-primary);">Drop raw .eml file here or click to browse</div>
           <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Supports RFC 5322, multipart MIME, and raw mail headers</div>
         </div>
 
-        <div style="text-align: center; margin: 12px 0; color: var(--text-muted); font-size: 11px; font-weight: bold;">
+        <div style="text-align: center; margin: 12px 0; color: var(--text-muted); font-size: 11px; font-weight: 600;">
           &mdash; OR PASTE RAW RFC 5322 HEADERS / TEXT &mdash;
         </div>
 
@@ -630,8 +637,8 @@
     <div class="modal-window mailbox-window">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <svg width="20" height="20" fill="none" stroke="var(--emerald-core)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-          <span style="font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">DIRECT MAILBOX INTEGRATION (READ-ONLY)</span>
+          <svg width="20" height="20" fill="none" stroke="var(--color-safe)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          <span style="font-weight: 700; color: var(--text-primary); letter-spacing: 0.3px;">Direct Mailbox Integration (Read-Only)</span>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
           <span id="mbox-header-status-badge" class="sample-tag" style="background:rgba(255,255,255,0.06);color:var(--text-muted);">DISCONNECTED</span>
@@ -683,10 +690,10 @@
           <div id="mbox-panel-gmail" class="mbox-panel">
             <div class="mbox-info-banner">
               <div>
-                <strong style="color: var(--cyan-core);">Official Gmail API (OAuth 2.0)</strong><br/>
+                <strong style="color: var(--color-primary);">Official Gmail API (OAuth 2.0)</strong><br/>
                 Requests read-only access (<code>https://www.googleapis.com/auth/gmail.readonly</code>). Passwords are never collected or stored.
               </div>
-              <button class="btn-cyber-solid" id="btn-demo-gmail" style="background: var(--emerald-core); color: #000; font-size: 11px;">
+              <button class="btn-cyber-solid" id="btn-demo-gmail" style="font-size: 11px; padding: 6px 12px;">
                 ⚡ Launch Demo Mailbox
               </button>
             </div>
@@ -717,10 +724,10 @@
           <div id="mbox-panel-outlook" class="mbox-panel" style="display: none;">
             <div class="mbox-info-banner">
               <div>
-                <strong style="color: var(--violet-core);">Microsoft Graph API (Azure AD OAuth 2.0)</strong><br/>
+                <strong style="color: var(--color-info);">Microsoft Graph API (Azure AD OAuth 2.0)</strong><br/>
                 Requests read-only mailbox permissions (<code>Mail.Read</code>). Raw RFC 822 MIME fetched directly via <code>/messages/{id}/$value</code>.
               </div>
-              <button class="btn-cyber-solid" id="btn-demo-outlook" style="background: var(--emerald-core); color: #000; font-size: 11px;">
+              <button class="btn-cyber-solid" id="btn-demo-outlook" style="font-size: 11px; padding: 6px 12px;">
                 ⚡ Launch Demo Mailbox
               </button>
             </div>
@@ -755,10 +762,10 @@
           <div id="mbox-panel-imap" class="mbox-panel" style="display: none;">
             <div class="mbox-info-banner">
               <div>
-                <strong style="color: var(--amber-core);">Generic IMAP (SSL Port 993)</strong><br/>
+                <strong style="color: var(--color-warning);">Generic IMAP (SSL Port 993)</strong><br/>
                 Supports Yahoo, Zoho, iCloud, or custom corporate mailservers. Password is held in volatile memory only and never saved to disk.
               </div>
-              <button class="btn-cyber-solid" id="btn-demo-imap" style="background: var(--emerald-core); color: #000; font-size: 11px;">
+              <button class="btn-cyber-solid" id="btn-demo-imap" style="font-size: 11px; padding: 6px 12px;">
                 ⚡ Launch Demo Mailbox
               </button>
             </div>
@@ -793,8 +800,8 @@
         <!-- Mailbox Messages Section -->
         <div id="mbox-messages-section" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div style="font-weight: 700; font-size: 13px; color: #ffffff;">
-              INBOX MESSAGES (<span id="mbox-msg-count">0</span>)
+            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">
+              Inbox Messages (<span id="mbox-msg-count">0</span>)
             </div>
             <div style="display: flex; gap: 8px;">
               <input type="text" id="mbox-search-input" class="mbox-input" placeholder="Search subject or sender..." style="width: 220px;">

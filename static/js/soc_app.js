@@ -10,11 +10,14 @@ class SocPlatformApp {
     this.graphVisualizer = null;
     this.viewMode = localStorage.getItem('soc_view_mode') || 'simple';
     this.activeTab = this.viewMode === 'soc' ? 'threat' : 'simple';
+    this.theme = localStorage.getItem('app_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
     this.init();
   }
 
   async init() {
+    this.applyTheme(this.theme);
+    this.bindThemeToggle();
     this.bindNavigation();
     this.bindAudienceModeToggle();
     this.bindProgressiveDisclosure();
@@ -102,6 +105,34 @@ class SocPlatformApp {
 
     // Initialize mode
     setMode(this.viewMode);
+  }
+
+  bindThemeToggle() {
+    const btnTheme = document.getElementById('btn-theme-toggle');
+    if (btnTheme) {
+      btnTheme.addEventListener('click', () => {
+        const nextTheme = this.theme === 'dark' ? 'light' : 'dark';
+        this.applyTheme(nextTheme);
+      });
+    }
+  }
+
+  applyTheme(theme) {
+    this.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('app_theme', theme);
+
+    const btnTheme = document.getElementById('btn-theme-toggle');
+    if (btnTheme) {
+      const label = btnTheme.querySelector('.theme-toggle-label');
+      if (label) {
+        label.textContent = theme === 'dark' ? 'Dark' : 'Light';
+      }
+    }
+
+    if (this.graphVisualizer) {
+      this.graphVisualizer.setTheme(theme);
+    }
   }
 
   bindProgressiveDisclosure() {
@@ -453,7 +484,7 @@ class SocPlatformApp {
         return `
           <div class="action-checklist-item">
             <span class="action-badge ${badgeClass}">${badgeLabel}</span>
-            <span style="color: ${act.type === 'dont' ? '#fecdd3' : '#ffffff'};">${this.escapeHtml(act.text)}</span>
+            <span style="color: var(--text-primary); font-weight: 500;">${this.escapeHtml(act.text)}</span>
           </div>
         `;
       }).join('');
@@ -831,8 +862,8 @@ class SocPlatformApp {
     reportContainer.innerHTML = `
       <div style="border-bottom: 2px solid var(--border-subtle); padding-bottom: 16px; margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
-          <h2 style="font-size: 20px; font-weight: 800; color: #ffffff;">FORENSIC INCIDENT INVESTIGATION REPORT</h2>
-          <span style="font-family: var(--text-mono); color: var(--cyan-core); font-weight: bold;">${dossier.case_id}</span>
+          <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary);">Forensic Incident Investigation Report</h2>
+          <span style="font-family: var(--text-mono); color: var(--color-primary); font-weight: bold;">${dossier.case_id}</span>
         </div>
         <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">
           Generated on: ${dossier.date_str} | Classification: <strong>${threat.classification}</strong> (Risk: ${threat.risk_score}/100)
@@ -879,7 +910,7 @@ class SocPlatformApp {
             ${(ai.recommended_actions || []).map(a => `
               <div class="playbook-step">
                 <div>
-                  <div style="font-weight: 700; font-size: 13px; color: #ffffff;">${this.escapeHtml(a.action)}</div>
+                  <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${this.escapeHtml(a.action)}</div>
                   <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">${this.escapeHtml(a.detail)}</div>
                 </div>
                 <span class="playbook-priority ${a.priority.includes('P1') ? 'priority-p1' : (a.priority.includes('P2') ? 'priority-p2' : 'priority-p3')}">
@@ -1287,8 +1318,8 @@ class SocPlatformApp {
                 ${this.escapeHtml(m.from || 'Unknown')}
               </td>
               <td>
-                <div style="font-weight: 600; color: ${isSuspicious ? 'var(--amber-core)' : '#ffffff'}; font-size: 12px; margin-bottom: 3px;">
-                  ${isSuspicious ? '<span style="color:var(--crimson-core); margin-right:4px;">&#9888;</span>' : ''}${this.escapeHtml(m.subject || '(No Subject)')}
+                <div style="font-weight: 600; color: ${isSuspicious ? 'var(--color-warning)' : 'var(--text-primary)'}; font-size: 12px; margin-bottom: 3px;">
+                  ${isSuspicious ? '<span style="color:var(--color-danger); margin-right:4px;">&#9888;</span>' : ''}${this.escapeHtml(m.subject || '(No Subject)')}
                 </div>
                 <div style="font-size: 11px; color: var(--text-muted); max-height: 32px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                   ${this.escapeHtml(m.snippet || '')}
@@ -1298,7 +1329,7 @@ class SocPlatformApp {
                 ${this.escapeHtml(m.date || '')}
               </td>
               <td style="text-align: right; white-space: nowrap;">
-                <button class="btn-cyber-solid btn-analyze-msg" data-msg-id="${this.escapeHtml(m.id)}" style="background: var(--cyan-core); color: #000; font-size: 11px; padding: 5px 12px; font-weight: 700;">
+                <button class="btn-cyber-solid btn-analyze-msg" data-msg-id="${this.escapeHtml(m.id)}" style="font-size: 11px; padding: 5px 12px; font-weight: 600;">
                   Analyze Email &rarr;
                 </button>
               </td>
@@ -1384,7 +1415,7 @@ class SocPlatformApp {
     if (!spinner) {
       spinner = document.createElement('div');
       spinner.id = 'soc-global-spinner';
-      spinner.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#00f0ff;font-family:var(--font-sans);font-weight:bold;';
+      spinner.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:var(--color-primary);font-family:var(--font-sans);font-weight:bold;';
       spinner.innerHTML = '<div class="pulse-dot" style="width:24px;height:24px;margin-bottom:12px;"></div><span id="spinner-msg"></span>';
       document.body.appendChild(spinner);
     }

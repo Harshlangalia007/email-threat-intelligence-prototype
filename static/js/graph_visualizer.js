@@ -23,9 +23,14 @@ class InteractiveGraphVisualizer {
 
     this.animId = null;
     this.simulationRunning = true;
+    this.theme = document.documentElement.getAttribute('data-theme') || 'dark';
 
     this._setupCanvas();
     this._attachEvents();
+  }
+
+  setTheme(theme) {
+    this.theme = theme;
   }
 
   _setupCanvas() {
@@ -161,7 +166,11 @@ class InteractiveGraphVisualizer {
       this.ctx.beginPath();
       this.ctx.moveTo(edge.from.x, edge.from.y);
       this.ctx.lineTo(edge.to.x, edge.to.y);
-      this.ctx.strokeStyle = isCrossCampaign ? 'rgba(255, 51, 102, 0.7)' : 'rgba(100, 116, 139, 0.4)';
+      if (this.theme === 'light') {
+        this.ctx.strokeStyle = isCrossCampaign ? 'rgba(220, 38, 38, 0.75)' : 'rgba(148, 163, 184, 0.6)';
+      } else {
+        this.ctx.strokeStyle = isCrossCampaign ? 'rgba(239, 68, 68, 0.75)' : 'rgba(71, 85, 105, 0.6)';
+      }
       this.ctx.lineWidth = isCrossCampaign ? 2.5 : 1.5;
       if (isCrossCampaign) {
         this.ctx.setLineDash([5, 5]);
@@ -175,7 +184,11 @@ class InteractiveGraphVisualizer {
         const mx = (edge.from.x + edge.to.x) / 2;
         const my = (edge.from.y + edge.to.y) / 2;
         this.ctx.font = '9px "JetBrains Mono", monospace';
-        this.ctx.fillStyle = isCrossCampaign ? '#ff3366' : '#64748b';
+        if (this.theme === 'light') {
+          this.ctx.fillStyle = isCrossCampaign ? '#dc2626' : '#64748b';
+        } else {
+          this.ctx.fillStyle = isCrossCampaign ? '#ef4444' : '#94a3b8';
+        }
         this.ctx.textAlign = 'center';
         this.ctx.fillText(edge.label, mx, my - 4);
       }
@@ -187,11 +200,15 @@ class InteractiveGraphVisualizer {
       const isHovered = (n === this.hoveredNode);
       const isDragged = (n === this.draggedNode);
 
-      // Outer glow if threat or hovered
+      // Subtle outer ring if threat or hovered
       if (n.is_threat || isHovered) {
         this.ctx.beginPath();
-        this.ctx.arc(n.x, n.y, n.radius + 8, 0, Math.PI * 2);
-        this.ctx.fillStyle = n.is_threat ? 'rgba(255, 51, 102, 0.25)' : 'rgba(0, 240, 255, 0.25)';
+        this.ctx.arc(n.x, n.y, n.radius + 6, 0, Math.PI * 2);
+        if (this.theme === 'light') {
+          this.ctx.fillStyle = n.is_threat ? 'rgba(220, 38, 38, 0.15)' : 'rgba(37, 99, 235, 0.15)';
+        } else {
+          this.ctx.fillStyle = n.is_threat ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.25)';
+        }
         this.ctx.fill();
       }
 
@@ -200,19 +217,24 @@ class InteractiveGraphVisualizer {
       this.ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
       this.ctx.fillStyle = n.color;
       this.ctx.fill();
-      this.ctx.strokeStyle = isHovered ? '#ffffff' : (n.is_threat ? '#ff3366' : 'rgba(255, 255, 255, 0.2)');
-      this.ctx.lineWidth = isHovered ? 3 : 1.5;
+
+      if (this.theme === 'light') {
+        this.ctx.strokeStyle = isHovered ? '#0f172a' : (n.is_threat ? '#dc2626' : 'rgba(0, 0, 0, 0.15)');
+      } else {
+        this.ctx.strokeStyle = isHovered ? '#ffffff' : (n.is_threat ? '#ef4444' : 'rgba(255, 255, 255, 0.2)');
+      }
+      this.ctx.lineWidth = isHovered ? 2.5 : 1.5;
       this.ctx.stroke();
 
       // Node label
-      this.ctx.font = '11px "Inter", sans-serif';
-      this.ctx.fillStyle = '#f1f5f9';
+      this.ctx.font = '500 11px "Inter", sans-serif';
+      this.ctx.fillStyle = this.theme === 'light' ? '#0f172a' : '#f8fafc';
       this.ctx.textAlign = 'center';
       this.ctx.fillText(n.label, n.x, n.y + n.radius + 14);
 
       // Node type indicator tag
-      this.ctx.font = '8px "JetBrains Mono", monospace';
-      this.ctx.fillStyle = '#94a3b8';
+      this.ctx.font = '9px "JetBrains Mono", monospace';
+      this.ctx.fillStyle = this.theme === 'light' ? '#64748b' : '#94a3b8';
       this.ctx.fillText(n.type.toUpperCase(), n.x, n.y + n.radius + 24);
     }
 
@@ -220,7 +242,7 @@ class InteractiveGraphVisualizer {
   }
 
   _drawGrid() {
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    this.ctx.strokeStyle = this.theme === 'light' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.03)';
     this.ctx.lineWidth = 1;
     const step = 40 * this.camera.zoom;
     const offsetX = (this.camera.x % step);
