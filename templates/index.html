@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIH26106 — AI Email Threat Detection & Forensic Intelligence Platform</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom SOC Stylesheet -->
+  <link rel="stylesheet" href="/static/css/soc.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       TOP NAVIGATION BAR
+       ======================================================================== -->
+  <header class="soc-header">
+    <div class="brand-section">
+      <div class="brand-shield">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">
+          AEGIS-SOC <span class="brand-badge">SIH26106</span>
+        </div>
+        <div style="font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px;">
+          AI-POWERED EMAIL THREAT DETECTION & FORENSIC INTELLIGENCE PLATFORM
+        </div>
+      </div>
+    </div>
+
+    <nav class="soc-nav">
+      <a class="nav-item active" data-tab="dashboard">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-tab="threat">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        Threat Detection
+      </a>
+      <a class="nav-item" data-tab="forensic">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+        Forensic Origin
+      </a>
+      <a class="nav-item" data-tab="graph">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+        Infrastructure Graph
+      </a>
+      <a class="nav-item" data-tab="reports">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        Cases / Reports
+      </a>
+    </nav>
+
+    <div class="soc-telemetry-badge">
+      <div class="pulse-dot"></div>
+      <span>SOC SENSORS ACTIVE</span>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN SOC CONTAINER
+       ======================================================================== -->
+  <main class="soc-container">
+
+    <!-- Scenario Quick Test Bar -->
+    <section class="sample-selector-bar">
+      <div class="sample-label">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        DEMO SCENARIOS:
+      </div>
+
+      <div class="sample-pill-group">
+        <button class="sample-btn" data-sample-id="sample_1_legitimate">
+          <span>Sample 1: Legitimate Corp</span>
+          <span class="sample-tag clean">CLEAN</span>
+        </button>
+        <button class="sample-btn active" data-sample-id="sample_2_phishing">
+          <span>Sample 2: Credential Phishing</span>
+          <span class="sample-tag threat">CRITICAL</span>
+        </button>
+        <button class="sample-btn" data-sample-id="sample_3_bec">
+          <span>Sample 3: Executive BEC Fraud</span>
+          <span class="sample-tag bec">BEC</span>
+        </button>
+        <button class="sample-btn" data-sample-id="sample_4_malware_shared_infra">
+          <span>Sample 4: Shared Campaign Malware</span>
+          <span class="sample-tag threat">SHARED ASN</span>
+        </button>
+      </div>
+
+      <div class="action-btn-group">
+        <button class="btn-cyber" id="btn-open-upload">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Upload / Paste .eml
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 1: SOC DASHBOARD
+         ====================================================================== -->
+    <div id="tab-dashboard" class="tab-pane active">
+      
+      <!-- Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Emails Analyzed</div>
+          <div class="metric-value" id="stat-total-analyzed">0</div>
+          <div class="metric-sub">Processed through pipeline</div>
+        </div>
+        <div class="metric-card crimson">
+          <div class="metric-label">High-Risk Threats</div>
+          <div class="metric-value" id="stat-high-risk" style="color: var(--crimson-core);">0</div>
+          <div class="metric-sub">Score &ge; 75 / 100</div>
+        </div>
+        <div class="metric-card amber">
+          <div class="metric-label">Phishing Detections</div>
+          <div class="metric-value" id="stat-phishing" style="color: var(--amber-core);">0</div>
+          <div class="metric-sub">Credential lures & lookalikes</div>
+        </div>
+        <div class="metric-card violet">
+          <div class="metric-label">BEC Detections</div>
+          <div class="metric-value" id="stat-bec" style="color: var(--violet-core);">0</div>
+          <div class="metric-sub">CEO & wire fraud attempts</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Distinct Domains</div>
+          <div class="metric-value" id="stat-domains">0</div>
+          <div class="metric-sub">Tracked across sender headers</div>
+        </div>
+        <div class="metric-card emerald">
+          <div class="metric-label">Ingress IPs Tracked</div>
+          <div class="metric-value" id="stat-ips" style="color: var(--emerald-core);">0</div>
+          <div class="metric-sub">Correlated infrastructure nodes</div>
+        </div>
+      </div>
+
+      <!-- Recent Investigations Table -->
+      <div class="cyber-card">
+        <div class="card-header-soc">
+          <div class="card-title-group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <span class="card-title">RECENT SOC INVESTIGATION DOSSIERS</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">Click row to open investigation</span>
+        </div>
+        <div class="card-body-soc" style="padding: 0;">
+          <table class="soc-table">
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Subject</th>
+                <th>Classification</th>
+                <th>Risk Score</th>
+                <th>Origin Ingress</th>
+                <th>Logged At</th>
+              </tr>
+            </thead>
+            <tbody id="recent-cases-tbody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading investigation history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Operational Architecture Highlights -->
+      <div class="two-col-grid">
+        <div class="cyber-card">
+          <div class="card-header-soc">
+            <span class="card-title">DUAL-MODULE SOC ARCHITECTURE</span>
+          </div>
+          <div class="card-body-soc" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+            <p style="margin-bottom: 10px;">
+              <strong style="color: var(--cyan-core);">Module 1 &mdash; Threat & Fraud Engine:</strong> Analyzes identity spoofing, SPF/DKIM/DMARC alignment, social engineering coercion cues, and static URL structures to output an explainable 0&ndash;100 risk score.
+            </p>
+            <p>
+              <strong style="color: var(--violet-core);">Module 2 &mdash; Forensic Origin & Infrastructure Engine:</strong> Reconstructs the multi-hop relay path, isolates the earliest reliable sending MTA, enriches ASN/ISP intelligence, and renders an interactive relationship graph.
+            </p>
+          </div>
+        </div>
+
+        <div class="cyber-card">
+          <div class="card-header-soc">
+            <span class="card-title">ATTRIBUTION PRINCIPLE & CAVEATS</span>
+          </div>
+          <div class="card-body-soc" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+            <p style="margin-bottom: 10px;">
+              <strong style="color: var(--amber-core);">Strict SOC Attribution Standard:</strong> The platform explicitly separates <em>observed sending infrastructure</em> from the <em>attacker's physical location</em>.
+            </p>
+            <p>
+              Attackers routinely route campaigns through cloud providers, VPNs, Tor nodes, or compromised relays. The system explicitly declares confidence levels and warns analysts against premature physical attribution.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TAB 2: THREAT DETECTION
+         ====================================================================== -->
+    <div id="tab-threat" class="tab-pane">
+      
+      <!-- Verdict Banner -->
+      <div id="threat-verdict-banner" class="verdict-banner"></div>
+
+      <!-- Authentication Matrix -->
+      <div class="cyber-card">
+        <div class="card-header-soc">
+          <div class="card-title-group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            <span class="card-title">EMAIL AUTHENTICATION TELEMETRY (SPF / DKIM / DMARC)</span>
+          </div>
+          <span style="font-family: var(--text-mono); font-size: 11px; color: var(--cyan-core);">DETERMINISTIC VERIFICATION</span>
+        </div>
+        <div class="card-body-soc">
+          <div id="auth-matrix-container" class="auth-matrix"></div>
+        </div>
+      </div>
+
+      <!-- Threat Indicators & Explainability -->
+      <div class="two-col-grid">
+        <div class="cyber-card">
+          <div class="card-header-soc">
+            <span class="card-title">TRANSPARENT RISK FACTOR BREAKDOWN (WHY THIS SCORE?)</span>
+          </div>
+          <div class="card-body-soc">
+            <ul id="threat-reasons-list" class="telemetry-list"></ul>
+          </div>
+        </div>
+
+        <div class="cyber-card">
+          <div class="card-header-soc">
+            <span class="card-title">SOCIAL ENGINEERING INTENT DETECTIONS</span>
+          </div>
+          <div class="card-body-soc" id="social-engineering-container"></div>
+        </div>
+      </div>
+
+      <!-- Extracted URLs -->
+      <div class="cyber-card">
+        <div class="card-header-soc">
+          <div class="card-title-group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            <span class="card-title">STATIC URL & DOMAIN EXTRACTION (SAFE NON-EXECUTION SCAN)</span>
+          </div>
+          <span style="font-size: 11px; color: var(--emerald-core);">&#9679; Zero-Fetch Policy</span>
+        </div>
+        <div class="card-body-soc" id="extracted-urls-container" style="padding: 0;"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TAB 3: FORENSIC ORIGIN & INFRASTRUCTURE
+         ====================================================================== -->
+    <div id="tab-forensic" class="tab-pane">
+
+      <!-- Mandatory Caveat Box -->
+      <div id="forensic-caveat-container"></div>
+
+      <!-- Origin MTA Ingress Card -->
+      <div class="cyber-card">
+        <div class="card-header-soc">
+          <div class="card-title-group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+            <span class="card-title">EARLIEST TRUSTWORTHY SENDING INFRASTRUCTURE</span>
+          </div>
+          <span class="sample-tag clean">PUBLIC INTERNET INGRESS POINT</span>
+        </div>
+        <div class="card-body-soc" id="origin-mta-card"></div>
+      </div>
+
+      <!-- Relay Path Timeline -->
+      <div class="cyber-card">
+        <div class="card-header-soc">
+          <div class="card-title-group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            <span class="card-title">CHRONOLOGICAL SMTP RELAY PATH (ORIGIN &rarr; DESTINATION)</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">Reconstructed from Received headers</span>
+        </div>
+        <div class="card-body-soc">
+          <div id="relay-path-timeline" class="relay-timeline"></div>
+        </div>
+      </div>
+
+      <!-- DNS & Domain Deep-Dive -->
+      <div class="cyber-card">
+        <div class="card-header-soc">
+          <span class="card-title">SENDER DOMAIN & DNS INTELLIGENCE</span>
+        </div>
+        <div class="card-body-soc" id="dns-investigation-container"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TAB 4: INFRASTRUCTURE GRAPH
+         ====================================================================== -->
+    <div id="tab-graph" class="tab-pane">
+      <div class="cyber-card" style="margin-bottom: 0;">
+        <div class="card-header-soc">
+          <div class="card-title-group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            <span class="card-title">INTERACTIVE INFRASTRUCTURE RELATIONSHIP & CORRELATION GRAPH</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">Drag nodes to inspect &bull; Scroll to zoom</span>
+        </div>
+        
+        <div class="graph-viewport-card">
+          <canvas id="infrastructure-canvas"></canvas>
+
+          <!-- Graph Zoom & Reset Controls -->
+          <div class="graph-controls">
+            <button class="graph-btn" id="btn-graph-fit" title="Fit to Screen">&#x2922;</button>
+          </div>
+
+          <!-- Graph Legend -->
+          <div class="graph-legend">
+            <div class="legend-item"><div class="legend-color" style="background: #00f0ff;"></div> Email Node</div>
+            <div class="legend-item"><div class="legend-color" style="background: #38bdf8;"></div> Sender / Identity</div>
+            <div class="legend-item"><div class="legend-color" style="background: #a855f7;"></div> Domain</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ff3366;"></div> IP / Host (Malicious)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #8b5cf6;"></div> Autonomous System (ASN)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div> Shared Threat Campaign</div>
+          </div>
+
+          <!-- Graph Inspector Drawer -->
+          <div id="graph-inspector-drawer" class="graph-inspector-drawer">
+            <div class="drawer-header">
+              <span id="drawer-node-title" class="drawer-title">Node Metadata</span>
+              <button id="drawer-close-btn" class="drawer-close">&times;</button>
+            </div>
+            <div id="drawer-node-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TAB 5: CASES / UNIFIED REPORT
+         ====================================================================== -->
+    <div id="tab-reports" class="tab-pane">
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px;">
+        <button class="btn-cyber" id="btn-export-iocs">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Export IOCs (JSON)
+        </button>
+        <button class="btn-cyber-solid" id="btn-print-report">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          Print / PDF Dossier
+        </button>
+      </div>
+
+      <div class="cyber-card">
+        <div class="card-body-soc" id="unified-report-body"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL: RAW .EML UPLOAD OR PASTE
+       ======================================================================== -->
+  <div id="eml-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span style="font-weight: 700; color: #ffffff;">ANALYZE CUSTOM EMAIL (.EML)</span>
+        <button id="btn-close-modal" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="dropzone" id="eml-dropzone">
+          <input type="file" id="eml-file-input" accept=".eml,.txt" style="display:none;">
+          <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:8px;color:var(--cyan-core);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+          <div style="font-weight: 600; color: #fff;">Drop raw .eml file here or click to browse</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Supports RFC 5322, multipart MIME, and raw mail headers</div>
+        </div>
+
+        <div style="text-align: center; margin: 12px 0; color: var(--text-muted); font-size: 11px; font-weight: bold;">
+          &mdash; OR PASTE RAW RFC 5322 HEADERS / TEXT &mdash;
+        </div>
+
+        <textarea id="raw-eml-textarea" class="eml-textarea" placeholder="Paste full raw email text including Received: headers, From:, To:, Subject:, and body..."></textarea>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+          <button class="btn-cyber-solid" id="btn-analyze-pasted">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Execute Threat & Forensic Analysis
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/graph_visualizer.js"></script>
+  <script src="/static/js/soc_app.js"></script>
+</body>
+</html>
