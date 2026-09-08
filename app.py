@@ -393,8 +393,11 @@ def handle_settings():
 
 
 if __name__ == "__main__":
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() in ("true", "1", "yes")
     print("\n=======================================================")
     print("  SIH26106 Email Threat Detection & Forensic Platform")
-    print("  SOC Analyst Cockpit online: http://127.0.0.1:5000")
+    print(f"  SOC Analyst Cockpit online: http://{host}:{port}")
     print("=======================================================\n")
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host=host, port=port, debug=debug)
