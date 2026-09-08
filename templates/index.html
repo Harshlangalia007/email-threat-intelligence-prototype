@@ -97,6 +97,10 @@
       </div>
 
       <div class="action-btn-group">
+        <button class="btn-cyber" id="btn-open-mailbox" style="border-color: var(--emerald-core); color: var(--emerald-core);">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          Connect Mailbox
+        </button>
         <button class="btn-cyber" id="btn-open-upload">
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
           Upload / Paste .eml
@@ -394,6 +398,205 @@
             Execute Threat & Forensic Analysis
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: CONNECT MAILBOX (GMAIL / OUTLOOK / IMAP)
+       ======================================================================== -->
+  <div id="mailbox-modal" class="modal-backdrop">
+    <div class="modal-window mailbox-window">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <svg width="20" height="20" fill="none" stroke="var(--emerald-core)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          <span style="font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">DIRECT MAILBOX INTEGRATION (READ-ONLY)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="mbox-header-status-badge" class="sample-tag" style="background:rgba(255,255,255,0.06);color:var(--text-muted);">DISCONNECTED</span>
+          <button id="btn-close-mailbox" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">&times;</button>
+        </div>
+      </div>
+
+      <!-- Mailbox Provider Selector Tabs -->
+      <div class="mailbox-nav-tabs">
+        <button class="mbox-tab-btn active" data-provider="gmail">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg>
+          Gmail (Google Workspace)
+        </button>
+        <button class="mbox-tab-btn" data-provider="outlook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm-1.5 18H7.5v-6H6V9h4.5v9zm6 0h-3v-6h-1.5V9h4.5v9z"/></svg>
+          Outlook / Microsoft 365
+        </button>
+        <button class="mbox-tab-btn" data-provider="imap">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+          Generic IMAP (SSL)
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        
+        <!-- Connected Session Banner -->
+        <div id="mbox-connected-view" class="mbox-connected-bar" style="display: none;">
+          <div>
+            <div style="font-weight: 700; color: var(--emerald-core); font-size: 13px;" id="mbox-active-account-title">
+              Connected to Mailbox
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;" id="mbox-active-account-email">
+              user@example.com
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-cyber" id="btn-refresh-mbox" style="padding: 6px 12px; font-size: 11px;">
+              &#x21bb; Refresh Inbox
+            </button>
+            <button class="btn-cyber" id="btn-disconnect-mbox" style="padding: 6px 12px; font-size: 11px; border-color: var(--crimson-core); color: var(--crimson-core);">
+              Disconnect
+            </button>
+          </div>
+        </div>
+
+        <!-- Provider Setup & Auth Card -->
+        <div id="mbox-setup-card" class="mbox-provider-card">
+          <!-- Gmail Setup Panel -->
+          <div id="mbox-panel-gmail" class="mbox-panel">
+            <div class="mbox-info-banner">
+              <div>
+                <strong style="color: var(--cyan-core);">Official Gmail API (OAuth 2.0)</strong><br/>
+                Requests read-only access (<code>https://www.googleapis.com/auth/gmail.readonly</code>). Passwords are never collected or stored.
+              </div>
+              <button class="btn-cyber-solid" id="btn-demo-gmail" style="background: var(--emerald-core); color: #000; font-size: 11px;">
+                ⚡ Launch Demo Mailbox
+              </button>
+            </div>
+
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+              &mdash; OR AUTHORIZE LIVE GOOGLE CLOUD OAUTH 2.0 &mdash;
+            </div>
+
+            <div class="mbox-input-grid">
+              <div class="mbox-input-group">
+                <label>OAuth Client ID</label>
+                <input type="text" id="gmail-client-id" class="mbox-input" placeholder="xxxx.apps.googleusercontent.com">
+              </div>
+              <div class="mbox-input-group">
+                <label>OAuth Client Secret</label>
+                <input type="password" id="gmail-client-secret" class="mbox-input" placeholder="GOCSPX-xxxx">
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+              <button class="btn-cyber" id="btn-auth-gmail">
+                Authorize via Google OAuth 2.0
+              </button>
+            </div>
+          </div>
+
+          <!-- Outlook Setup Panel -->
+          <div id="mbox-panel-outlook" class="mbox-panel" style="display: none;">
+            <div class="mbox-info-banner">
+              <div>
+                <strong style="color: var(--violet-core);">Microsoft Graph API (Azure AD OAuth 2.0)</strong><br/>
+                Requests read-only mailbox permissions (<code>Mail.Read</code>). Raw RFC 822 MIME fetched directly via <code>/messages/{id}/$value</code>.
+              </div>
+              <button class="btn-cyber-solid" id="btn-demo-outlook" style="background: var(--emerald-core); color: #000; font-size: 11px;">
+                ⚡ Launch Demo Mailbox
+              </button>
+            </div>
+
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+              &mdash; OR AUTHORIZE LIVE AZURE AD / M365 APP &mdash;
+            </div>
+
+            <div class="mbox-input-grid">
+              <div class="mbox-input-group">
+                <label>Application (Client) ID</label>
+                <input type="text" id="outlook-client-id" class="mbox-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+              </div>
+              <div class="mbox-input-group">
+                <label>Client Secret</label>
+                <input type="password" id="outlook-client-secret" class="mbox-input" placeholder="Client secret value">
+              </div>
+              <div class="mbox-input-group">
+                <label>Directory (Tenant) ID</label>
+                <input type="text" id="outlook-tenant-id" class="mbox-input" value="common">
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+              <button class="btn-cyber" id="btn-auth-outlook">
+                Authorize via Microsoft 365
+              </button>
+            </div>
+          </div>
+
+          <!-- IMAP Setup Panel -->
+          <div id="mbox-panel-imap" class="mbox-panel" style="display: none;">
+            <div class="mbox-info-banner">
+              <div>
+                <strong style="color: var(--amber-core);">Generic IMAP (SSL Port 993)</strong><br/>
+                Supports Yahoo, Zoho, iCloud, or custom corporate mailservers. Password is held in volatile memory only and never saved to disk.
+              </div>
+              <button class="btn-cyber-solid" id="btn-demo-imap" style="background: var(--emerald-core); color: #000; font-size: 11px;">
+                ⚡ Launch Demo Mailbox
+              </button>
+            </div>
+
+            <div class="mbox-input-grid">
+              <div class="mbox-input-group">
+                <label>IMAP Server Host</label>
+                <input type="text" id="imap-host" class="mbox-input" placeholder="imap.mail.yahoo.com">
+              </div>
+              <div class="mbox-input-group">
+                <label>Port (SSL)</label>
+                <input type="number" id="imap-port" class="mbox-input" value="993">
+              </div>
+              <div class="mbox-input-group">
+                <label>Username / Email</label>
+                <input type="text" id="imap-username" class="mbox-input" placeholder="analyst@domain.com">
+              </div>
+              <div class="mbox-input-group">
+                <label>App Password / Token</label>
+                <input type="password" id="imap-password" class="mbox-input" placeholder="App password">
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+              <button class="btn-cyber" id="btn-connect-imap">
+                Connect to IMAP Server
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mailbox Messages Section -->
+        <div id="mbox-messages-section" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-weight: 700; font-size: 13px; color: #ffffff;">
+              INBOX MESSAGES (<span id="mbox-msg-count">0</span>)
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="mbox-search-input" class="mbox-input" placeholder="Search subject or sender..." style="width: 220px;">
+            </div>
+          </div>
+
+          <div style="max-height: 380px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+            <table class="mbox-msg-table">
+              <thead>
+                <tr>
+                  <th style="width: 22%;">From</th>
+                  <th style="width: 48%;">Subject & Snippet</th>
+                  <th style="width: 15%;">Date</th>
+                  <th style="width: 15%; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="mbox-messages-tbody">
+                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No messages loaded</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

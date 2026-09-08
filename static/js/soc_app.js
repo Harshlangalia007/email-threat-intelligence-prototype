@@ -16,10 +16,11 @@ class SocPlatformApp {
   async init() {
     this.bindNavigation();
     this.bindSampleButtons();
-    this.bindModalEvents();
+    this.bindMailboxEvents();
     this.initGraph();
     await this.refreshDashboardMetrics();
     await this.loadRecentCases();
+    await this.checkMailboxStatus();
 
     // Auto-load Sample 2 (Phishing) by default so the analyst lands on rich telemetry immediately
     this.loadSample('sample_2_phishing');
@@ -694,6 +695,358 @@ class SocPlatformApp {
     a.download = `IOCs_${this.currentCase.case_id}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // =========================================================================
+  // DIRECT MAILBOX INTEGRATION (GMAIL / OUTLOOK / IMAP)
+  // =========================================================================
+
+  bindMailboxEvents() {
+    // 1. Open / Close Mailbox Modal
+    const mboxModal = document.getElementById('mailbox-modal');
+    const btnOpenMbox = document.getElementById('btn-open-mailbox');
+    const btnCloseMbox = document.getElementById('btn-close-mailbox');
+
+    if (btnOpenMbox && mboxModal) {
+      btnOpenMbox.addEventListener('click', () => {
+        mboxModal.classList.add('open');
+        this.checkMailboxStatus();
+      });
+    }
+
+    if (btnCloseMbox && mboxModal) {
+      btnCloseMbox.addEventListener('click', () => {
+        mboxModal.classList.remove('open');
+      });
+    }
+
+    // 2. Provider Tabs Switching
+    document.querySelectorAll('.mbox-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const provider = btn.dataset.provider;
+        document.querySelectorAll('.mbox-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Toggle setup panels
+        const pGmail = document.getElementById('mbox-panel-gmail');
+        const pOutlook = document.getElementById('mbox-panel-outlook');
+        const pImap = document.getElementById('mbox-panel-imap');
+
+        if (pGmail) pGmail.style.display = (provider === 'gmail' ? 'block' : 'none');
+        if (pOutlook) pOutlook.style.display = (provider === 'outlook' ? 'block' : 'none');
+        if (pImap) pImap.style.display = (provider === 'imap' ? 'block' : 'none');
+      });
+    });
+
+    // 3. Demo Mailbox Triggers
+    const btnDemoGmail = document.getElementById('btn-demo-gmail');
+    if (btnDemoGmail) {
+      btnDemoGmail.addEventListener('click', () => this.connectMailbox('gmail', { mode: 'demo' }));
+    }
+
+    const btnDemoOutlook = document.getElementById('btn-demo-outlook');
+    if (btnDemoOutlook) {
+      btnDemoOutlook.addEventListener('click', () => this.connectMailbox('outlook', { mode: 'demo' }));
+    }
+
+    const btnDemoImap = document.getElementById('btn-demo-imap');
+    if (btnDemoImap) {
+      btnDemoImap.addEventListener('click', () => this.connectMailbox('imap', { mode: 'demo' }));
+    }
+
+    // 4. Live OAuth & IMAP Connectors
+    const btnAuthGmail = document.getElementById('btn-auth-gmail');
+    if (btnAuthGmail) {
+      btnAuthGmail.addEventListener('click', () => {
+        const clientId = document.getElementById('gmail-client-id')?.value.trim();
+        const clientSecret = document.getElementById('gmail-client-secret')?.value.trim();
+        if (!clientId) {
+          alert('Please enter your Google Cloud OAuth Client ID, or click "Launch Demo Mailbox".');
+          return;
+        }
+        this.startOAuthFlow('gmail', clientId, clientSecret);
+      });
+    }
+
+    const btnAuthOutlook = document.getElementById('btn-auth-outlook');
+    if (btnAuthOutlook) {
+      btnAuthOutlook.addEventListener('click', () => {
+        const clientId = document.getElementById('outlook-client-id')?.value.trim();
+        const clientSecret = document.getElementById('outlook-client-secret')?.value.trim();
+        const tenant = document.getElementById('outlook-tenant-id')?.value.trim() || 'common';
+        if (!clientId) {
+          alert('Please enter your Azure AD Application (Client) ID, or click "Launch Demo Mailbox".');
+          return;
+        }
+        this.startOAuthFlow('outlook', clientId, clientSecret, tenant);
+      });
+    }
+
+    const btnConnectImap = document.getElementById('btn-connect-imap');
+    if (btnConnectImap) {
+      btnConnectImap.addEventListener('click', () => {
+        const host = document.getElementById('imap-host')?.value.trim();
+        const port = parseInt(document.getElementById('imap-port')?.value || '993', 10);
+        const username = document.getElementById('imap-username')?.value.trim();
+        const password = document.getElementById('imap-password')?.value || '';
+
+        if (!host || !username) {
+          alert('Please enter IMAP Server Host and Username/Email, or click "Launch Demo Mailbox".');
+          return;
+        }
+        this.connectMailbox('imap', { host, port, username, password });
+      });
+    }
+
+    // 5. Session Controls (Refresh & Disconnect)
+    const btnRefresh = document.getElementById('btn-refresh-mbox');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => this.loadMailboxMessages());
+    }
+
+    const btnDisconnect = document.getElementById('btn-disconnect-mbox');
+    if (btnDisconnect) {
+      btnDisconnect.addEventListener('click', () => this.disconnectMailbox());
+    }
+
+    // 6. Search Filter
+    const searchInput = document.getElementById('mbox-search-input');
+    if (searchInput) {
+      let debounceTimer = null;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          this.loadMailboxMessages(searchInput.value.trim());
+        }, 300);
+      });
+    }
+
+    // 7. OAuth Message Listener for Popups
+    window.addEventListener('message', async (event) => {
+      if (event.data && event.data.type === 'OAUTH_CODE' && event.data.code) {
+        console.log('[SOC Mailbox] Received OAuth callback code:', event.data.code);
+        if (this._pendingOauth) {
+          await this.connectMailbox(this._pendingOauth.provider, {
+            code: event.data.code,
+            client_id: this._pendingOauth.clientId,
+            client_secret: this._pendingOauth.clientSecret,
+            redirect_uri: this._pendingOauth.redirectUri,
+            tenant: this._pendingOauth.tenant
+          });
+          this._pendingOauth = null;
+        }
+      }
+    });
+  }
+
+  startOAuthFlow(provider, clientId, clientSecret, tenant = 'common') {
+    const redirectUri = `${window.location.origin}/api/mailbox/oauth/callback`;
+    this._pendingOauth = { provider, clientId, clientSecret, redirectUri, tenant };
+
+    let authUrlEndpoint = `/api/mailbox/oauth/url?provider=${encodeURIComponent(provider)}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    if (provider === 'outlook') {
+      authUrlEndpoint += `&tenant=${encodeURIComponent(tenant)}`;
+    }
+
+    fetch(authUrlEndpoint)
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' && data.auth_url) {
+          window.open(data.auth_url, 'soc_oauth_popup', 'width=600,height=700,scrollbars=yes');
+        } else {
+          alert('Failed to generate OAuth URL: ' + (data.message || 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        alert('OAuth error: ' + err.message);
+      });
+  }
+
+  async checkMailboxStatus() {
+    try {
+      const res = await fetch('/api/mailbox/status');
+      const data = await res.json();
+      if (data.status === 'success') {
+        this.renderMailboxState(data.mailbox);
+      }
+    } catch (e) {
+      console.warn("Error checking mailbox status:", e);
+    }
+  }
+
+  renderMailboxState(mbox) {
+    const connectedView = document.getElementById('mbox-connected-view');
+    const setupCard = document.getElementById('mbox-setup-card');
+    const messagesSection = document.getElementById('mbox-messages-section');
+    const statusBadge = document.getElementById('mbox-header-status-badge');
+    const titleEl = document.getElementById('mbox-active-account-title');
+    const emailEl = document.getElementById('mbox-active-account-email');
+
+    if (mbox && mbox.connected) {
+      if (statusBadge) {
+        statusBadge.textContent = `CONNECTED (${(mbox.provider || '').toUpperCase()})`;
+        statusBadge.className = 'sample-tag clean';
+      }
+      if (titleEl) {
+        titleEl.textContent = `${mbox.provider ? mbox.provider.toUpperCase() : 'MAILBOX'} (${mbox.is_demo ? 'Interactive Demo Sandbox' : 'Authenticated Live Read-Only'})`;
+      }
+      if (emailEl) {
+        emailEl.textContent = `Account: ${mbox.account || 'Active Session'} | Read-Only MIME Protocol`;
+      }
+
+      if (connectedView) connectedView.style.display = 'flex';
+      if (setupCard) setupCard.style.display = 'none';
+      if (messagesSection) messagesSection.style.display = 'block';
+
+      this.loadMailboxMessages();
+    } else {
+      if (statusBadge) {
+        statusBadge.textContent = 'DISCONNECTED';
+        statusBadge.className = 'sample-tag';
+        statusBadge.style.background = 'rgba(255,255,255,0.06)';
+        statusBadge.style.color = 'var(--text-muted)';
+      }
+      if (connectedView) connectedView.style.display = 'none';
+      if (setupCard) setupCard.style.display = 'block';
+      if (messagesSection) messagesSection.style.display = 'none';
+    }
+  }
+
+  async connectMailbox(provider, credentials) {
+    try {
+      this.showGlobalSpinner(`Connecting to ${provider.toUpperCase()} Mailbox...`);
+      const res = await fetch('/api/mailbox/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, credentials })
+      });
+      const data = await res.json();
+      if (data.status === 'connected') {
+        await this.checkMailboxStatus();
+      } else {
+        alert(`Connection Failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error("Connect mailbox error:", err);
+      alert("Error connecting to mailbox: " + err.message);
+    } finally {
+      this.hideGlobalSpinner();
+    }
+  }
+
+  async loadMailboxMessages(query = '') {
+    const tbody = document.getElementById('mbox-messages-tbody');
+    const countEl = document.getElementById('mbox-msg-count');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--cyan-core); padding: 20px;">Fetching mailbox messages...</td></tr>`;
+
+    try {
+      let url = '/api/mailbox/messages';
+      if (query) url += `?query=${encodeURIComponent(query)}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.status === 'success' && data.messages) {
+        const msgs = data.messages;
+        if (countEl) countEl.textContent = msgs.length;
+
+        if (msgs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No messages found in mailbox.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = msgs.map(m => {
+          const isSuspicious = (m.subject && (
+            m.subject.toLowerCase().includes('urgent') || 
+            m.subject.toLowerCase().includes('wire') || 
+            m.subject.toLowerCase().includes('reset') || 
+            m.subject.toLowerCase().includes('statement') || 
+            m.subject.toLowerCase().includes('suspend')
+          ));
+          return `
+            <tr style="transition: background 0.15s ease;">
+              <td style="font-family: var(--text-mono); font-size: 11px; color: var(--cyan-core); word-break: break-word;">
+                ${this.escapeHtml(m.from || 'Unknown')}
+              </td>
+              <td>
+                <div style="font-weight: 600; color: ${isSuspicious ? 'var(--amber-core)' : '#ffffff'}; font-size: 12px; margin-bottom: 3px;">
+                  ${isSuspicious ? '<span style="color:var(--crimson-core); margin-right:4px;">&#9888;</span>' : ''}${this.escapeHtml(m.subject || '(No Subject)')}
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); max-height: 32px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                  ${this.escapeHtml(m.snippet || '')}
+                </div>
+              </td>
+              <td style="font-family: var(--text-mono); font-size: 11px; color: var(--text-secondary); white-space: nowrap;">
+                ${this.escapeHtml(m.date || '')}
+              </td>
+              <td style="text-align: right; white-space: nowrap;">
+                <button class="btn-cyber-solid btn-analyze-msg" data-msg-id="${this.escapeHtml(m.id)}" style="background: var(--cyan-core); color: #000; font-size: 11px; padding: 5px 12px; font-weight: 700;">
+                  Analyze Email &rarr;
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        // Attach action handlers
+        tbody.querySelectorAll('.btn-analyze-msg').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const msgId = btn.dataset.msgId;
+            this.analyzeMailboxMessage(msgId);
+          });
+        });
+      } else {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--crimson-core); padding: 20px;">Failed to load messages: ${this.escapeHtml(data.message || 'Error')}</td></tr>`;
+      }
+    } catch (err) {
+      console.error("Error loading mailbox messages:", err);
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--crimson-core); padding: 20px;">Network error loading messages.</td></tr>`;
+    }
+  }
+
+  async analyzeMailboxMessage(messageId) {
+    const mboxModal = document.getElementById('mailbox-modal');
+    if (mboxModal) mboxModal.classList.remove('open');
+
+    this.showGlobalSpinner("Ingesting RFC 822 MIME from Mailbox & Running 7-Step Forensics Pipeline...");
+
+    try {
+      const res = await fetch('/api/mailbox/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message_id: messageId })
+      });
+
+      const data = await res.json();
+      if (data.status === 'success' && data.dossier) {
+        this.renderCase(data.dossier);
+        this.switchTab('threat');
+        await this.refreshDashboardMetrics();
+        await this.loadRecentCases();
+      } else {
+        alert("Mailbox Analysis Error: " + (data.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Mailbox analysis error:", err);
+      alert("Analysis error: " + err.message);
+    } finally {
+      this.hideGlobalSpinner();
+    }
+  }
+
+  async disconnectMailbox() {
+    try {
+      this.showGlobalSpinner("Disconnecting Mailbox...");
+      await fetch('/api/mailbox/disconnect', { method: 'POST' });
+      await this.checkMailboxStatus();
+    } catch (err) {
+      console.error("Disconnect error:", err);
+    } finally {
+      this.hideGlobalSpinner();
+    }
   }
 
   // =========================================================================

@@ -1044,6 +1044,166 @@ body {
 }
 
 /* ==========================================================================
+   MAILBOX BROWSER & PROVIDER INTEGRATION STYLES
+   ========================================================================== */
+
+.mailbox-window {
+  width: 95%;
+  max-width: 1080px;
+  max-height: 85vh;
+}
+
+.mailbox-nav-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 24px 0 24px;
+  background: var(--bg-card);
+}
+
+.mbox-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.mbox-tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.mbox-tab-btn.active {
+  color: var(--cyan-core);
+  border-bottom-color: var(--cyan-core);
+}
+
+.mbox-provider-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.mbox-info-banner {
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mbox-connected-bar {
+  background: rgba(0, 255, 157, 0.05);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mbox-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.mbox-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mbox-input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mbox-input {
+  background: var(--bg-core);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--text-mono);
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.mbox-input:focus {
+  border-color: var(--cyan-core);
+}
+
+.mbox-msg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mbox-msg-table th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.mbox-msg-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mbox-msg-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.btn-analyze-msg {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(168, 85, 247, 0.2));
+  border: 1px solid var(--cyan-core);
+  color: var(--cyan-core);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-analyze-msg:hover {
+  background: var(--cyan-core);
+  color: #000;
+  box-shadow: var(--shadow-glow-cyan);
+}
+
+/* ==========================================================================
    PRINT / DOSSIER EXPORT STYLES
    ========================================================================== */
 

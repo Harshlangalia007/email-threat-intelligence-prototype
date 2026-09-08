@@ -16,6 +16,7 @@ from engine.graph_engine import GraphEngine
 from engine.ai_provider import AIProviderManager
 from engine.samples import SAMPLE_EMAILS, get_all_samples, get_sample_by_id
 from engine.case_store import CaseStore
+from engine.mailbox import MailboxManager
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -27,6 +28,7 @@ forensic_investigator = ForensicInvestigator(intel_engine=intel_engine)
 graph_engine = GraphEngine()
 ai_manager = AIProviderManager.get_instance()
 case_store = CaseStore(db_path="cases.db")
+mailbox_manager = MailboxManager.get_instance()
 
 
 def seed_initial_samples():
@@ -195,6 +197,166 @@ def get_graph(case_id):
     if not case:
         return jsonify({"status": "error", "message": "Case not found"}), 404
     return jsonify({"status": "success", "graph": case.get("graph_data", {})})
+
+
+@app.route("/api/mailbox/status", methods=["GET"])
+def mailbox_status():
+    """Returns the current mailbox connection status and active provider."""
+    return jsonify({
+        "status": "success",
+        "mailbox": mailbox_manager.get_status()
+    })
+
+
+@app.route("/api/mailbox/oauth/url", methods=["GET"])
+def mailbox_oauth_url():
+    """Generates the OAuth 2.0 authorization URL for Gmail or Outlook."""
+    provider = request.args.get("provider", "gmail").lower()
+    client_id = request.args.get("client_id", "")
+    redirect_uri = request.args.get("redirect_uri", f"{request.host_url}api/mailbox/oauth/callback")
+    tenant = request.args.get("tenant", "common")
+
+    if not client_id:
+        return jsonify({"status": "error", "message": "client_id parameter is required"}), 400
+
+    connector = mailbox_manager.connectors.get(provider)
+    if not connector or not hasattr(connector, "build_auth_url"):
+        return jsonify({"status": "error", "message": f"OAuth not supported for provider: {provider}"}), 400
+
+    if provider == "outlook":
+        url = connector.build_auth_url(client_id=client_id, redirect_uri=redirect_uri, tenant=tenant)
+    else:
+        url = connector.build_auth_url(client_id=client_id, redirect_uri=redirect_uri)
+
+    return jsonify({"status": "success", "auth_url": url, "provider": provider})
+
+
+@app.route("/api/mailbox/connect", methods=["POST"])
+def mailbox_connect():
+    """Connects to a mailbox (Gmail, Outlook, or IMAP) via OAuth or Demo mode."""
+    data = request.get_json() or {}
+    provider = data.get("provider", "gmail").lower()
+    credentials = data.get("credentials", {})
+
+    result = mailbox_manager.connect(provider, credentials)
+    status_code = 200 if result.get("status") == "connected" else 400
+    return jsonify(result), status_code
+
+
+@app.route("/api/mailbox/messages", methods=["GET"])
+def mailbox_list_messages():
+    """Lists recent messages from the currently connected mailbox."""
+    query = request.args.get("query")
+    max_results = request.args.get("max_results", 20, type=int)
+
+    messages = mailbox_manager.list_messages(query=query, max_results=max_results)
+    return jsonify({
+        "status": "success",
+        "count": len(messages),
+        "messages": messages,
+        "mailbox": mailbox_manager.get_status()
+    })
+
+
+@app.route("/api/mailbox/analyze", methods=["POST"])
+def mailbox_analyze_message():
+    """
+    Fetches raw RFC 822 MIME message for the selected message ID from the connected mailbox,
+    then executes the standard threat and forensic analysis pipeline.
+    """
+    try:
+        data = request.get_json() or {}
+        message_id = data.get("message_id")
+        if not message_id:
+            return jsonify({"status": "error", "message": "message_id is required"}), 400
+
+        # Step 1: Fetch raw RFC 822 MIME from active mailbox
+        raw_eml = mailbox_manager.fetch_raw_message(message_id)
+
+        # Step 2: Parse Email through existing RFC 5322 parser
+        parsed = parser.parse_raw_eml(raw_eml)
+
+        # Step 3: Module 1 Threat Detection
+        threat_data = threat_detector.analyze(parsed)
+
+        # Step 4: Module 2 Forensic Origin Investigation
+        forensic_data = forensic_investigator.investigate(parsed)
+
+        # Step 5: AI Layer Synthesis
+        ai_synthesis = ai_manager.analyze(parsed, threat_data, forensic_data)
+
+        # Step 6: Relationship Graph
+        case_id = f"CASE-MBOX-{int(time.time())}-{os.urandom(2).hex().upper()}"
+        graph_data = graph_engine.build_email_graph(case_id, parsed, threat_data, forensic_data)
+
+        # Step 7: Assemble Complete Dossier
+        dossier = {
+            "case_id": case_id,
+            "source_type": f"mailbox_{mailbox_manager.active_provider or 'direct'}",
+            "message_id": message_id,
+            "timestamp": time.time(),
+            "date_str": time.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "raw_eml": raw_eml,
+            "parsed_email": parsed,
+            "threat_detection": threat_data,
+            "forensic_investigation": forensic_data,
+            "ai_synthesis": ai_synthesis,
+            "graph_data": graph_data
+        }
+
+        # Step 8: Persist Case
+        case_store.save_case(dossier)
+
+        return jsonify({
+            "status": "success",
+            "case_id": case_id,
+            "dossier": dossier
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/mailbox/disconnect", methods=["POST"])
+def mailbox_disconnect():
+    """Disconnects the active mailbox and clears tokens."""
+    result = mailbox_manager.disconnect()
+    return jsonify({"status": "success", "result": result})
+
+
+@app.route("/api/mailbox/oauth/callback", methods=["GET"])
+def mailbox_oauth_callback():
+    """Handles OAuth 2.0 redirect callback with authorization code."""
+    code = request.args.get("code")
+    state = request.args.get("state", "")
+    error = request.args.get("error")
+
+    if error:
+        return f"<h3>OAuth Error: {error}</h3><p>You may close this window and try again.</p>", 400
+
+    if not code:
+        return "<h3>Missing authorization code</h3>", 400
+
+    # Render a clean close-and-notify page for popup/redirect
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head><title>OAuth Success</title></head>
+    <body style="background:#070a12; color:#00f0ff; font-family:sans-serif; text-align:center; padding-top:50px;">
+      <h2>Authorization Code Received!</h2>
+      <p style="color:#94a3b8;">Code: <code>{code[:16]}...</code></p>
+      <p style="color:#00ff9d;">Returning authorization to Aegis SOC Platform...</p>
+      <script>
+        if (window.opener) {{
+          window.opener.postMessage({{ type: 'OAUTH_CODE', code: '{code}', state: '{state}' }}, '*');
+          window.close();
+        }}
+      </script>
+    </body>
+    </html>
+    """
 
 
 @app.route("/api/settings", methods=["GET", "POST"])
