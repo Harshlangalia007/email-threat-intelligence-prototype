@@ -8,13 +8,16 @@ class SocPlatformApp {
   constructor() {
     this.currentCase = null;
     this.graphVisualizer = null;
-    this.activeTab = 'dashboard';
+    this.viewMode = localStorage.getItem('soc_view_mode') || 'simple';
+    this.activeTab = this.viewMode === 'soc' ? 'threat' : 'simple';
 
     this.init();
   }
 
   async init() {
     this.bindNavigation();
+    this.bindAudienceModeToggle();
+    this.bindProgressiveDisclosure();
     this.bindSampleButtons();
     this.bindMailboxEvents();
     this.initGraph();
@@ -22,7 +25,7 @@ class SocPlatformApp {
     await this.loadRecentCases();
     await this.checkMailboxStatus();
 
-    // Auto-load Sample 2 (Phishing) by default so the analyst lands on rich telemetry immediately
+    // Auto-load Sample 2 (Phishing) by default so the user immediately lands on results
     this.loadSample('sample_2_phishing');
   }
 
@@ -58,6 +61,125 @@ class SocPlatformApp {
         }
       }, 50);
     }
+  }
+
+  bindAudienceModeToggle() {
+    const btnSimple = document.getElementById('btn-mode-simple');
+    const btnSoc = document.getElementById('btn-mode-soc');
+    const socNavItems = document.querySelectorAll('.soc-only');
+    const badgeText = document.getElementById('soc-badge-text');
+
+    const setMode = (mode) => {
+      this.viewMode = mode;
+      localStorage.setItem('soc_view_mode', mode);
+
+      if (btnSimple && btnSoc) {
+        btnSimple.classList.toggle('active', mode === 'simple');
+        btnSoc.classList.toggle('active', mode === 'soc');
+        btnSoc.classList.toggle('soc-active', mode === 'soc');
+      }
+
+      if (mode === 'simple') {
+        socNavItems.forEach(el => el.style.display = 'none');
+        if (badgeText) badgeText.textContent = 'SHIELD ACTIVE';
+        this.switchTab('simple');
+      } else {
+        socNavItems.forEach(el => el.style.display = 'inline-flex');
+        if (badgeText) badgeText.textContent = 'SOC SENSORS ACTIVE';
+        if (this.activeTab === 'simple') {
+          this.switchTab('threat');
+        }
+      }
+    };
+
+    if (btnSimple) {
+      btnSimple.addEventListener('click', () => setMode('simple'));
+    }
+
+    if (btnSoc) {
+      btnSoc.addEventListener('click', () => setMode('soc'));
+    }
+
+    // Initialize mode
+    setMode(this.viewMode);
+  }
+
+  bindProgressiveDisclosure() {
+    const toggleBtn = document.getElementById('btn-toggle-tech-details');
+    const panel = document.getElementById('tech-details-panel');
+    const chevron = document.getElementById('accordion-chevron');
+
+    if (toggleBtn && panel) {
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = panel.classList.toggle('open');
+        toggleBtn.classList.toggle('open', isOpen);
+        if (chevron) chevron.innerHTML = isOpen ? '&#x25B2;' : '&#x25BC;';
+      });
+    }
+
+    // Copy Raw Headers
+    const copyBtn = document.getElementById('btn-copy-headers');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const rawPre = document.getElementById('simple-raw-headers-pre');
+        if (rawPre && rawPre.textContent) {
+          navigator.clipboard.writeText(rawPre.textContent);
+          this.showToast("Raw RFC 5322 email headers copied to clipboard!");
+        }
+      });
+    }
+
+    // Report Phishing Button
+    const reportBtn = document.getElementById('btn-report-phishing');
+    if (reportBtn) {
+      reportBtn.addEventListener('click', () => {
+        this.showToast("🚨 Email successfully reported to IT Security Operations. Thank you for protecting your organization!");
+      });
+    }
+
+    // Mark as Safe Button
+    const markSafeBtn = document.getElementById('btn-mark-safe');
+    if (markSafeBtn) {
+      markSafeBtn.addEventListener('click', () => {
+        this.showToast("✓ Sender marked as known contact in your security profile.");
+      });
+    }
+
+    // Jump Links to Full SOC Specialist Cockpit
+    const jumpThreatBtn = document.getElementById('btn-switch-to-soc-threat');
+    if (jumpThreatBtn) {
+      jumpThreatBtn.addEventListener('click', () => {
+        const btnSoc = document.getElementById('btn-mode-soc');
+        if (btnSoc) btnSoc.click();
+        this.switchTab('threat');
+      });
+    }
+
+    const jumpGraphBtn = document.getElementById('btn-switch-to-soc-graph');
+    if (jumpGraphBtn) {
+      jumpGraphBtn.addEventListener('click', () => {
+        const btnSoc = document.getElementById('btn-mode-soc');
+        if (btnSoc) btnSoc.click();
+        this.switchTab('graph');
+      });
+    }
+  }
+
+  showToast(message) {
+    let toast = document.getElementById('soc-toast-notification');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'soc-toast-notification';
+      toast.className = 'soc-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span>${this.escapeHtml(message)}</span>`;
+    toast.style.display = 'flex';
+
+    clearTimeout(this._toastTimeout);
+    this._toastTimeout = setTimeout(() => {
+      toast.style.display = 'none';
+    }, 4500);
   }
 
   // =========================================================================
@@ -159,7 +281,7 @@ class SocPlatformApp {
     try {
       const ok = await this.runAnalysis(raw, 'paste');
       if (ok) {
-        this.switchTab('threat');
+        this.switchTab(this.viewMode === 'soc' ? 'threat' : 'simple');
       }
     } catch (err) {
       console.error("Paste analysis error:", err);
@@ -184,7 +306,7 @@ class SocPlatformApp {
         this.renderCase(data.dossier);
         await this.refreshDashboardMetrics();
         await this.loadRecentCases();
-        this.switchTab('threat');
+        this.switchTab(this.viewMode === 'soc' ? 'threat' : 'simple');
       } else {
         alert("Analysis Error: " + (data.message || "Unknown error"));
       }
@@ -208,6 +330,7 @@ class SocPlatformApp {
         this.renderCase(data.dossier);
         await this.refreshDashboardMetrics();
         await this.loadRecentCases();
+        this.switchTab(this.viewMode === 'soc' ? 'threat' : 'simple');
         return true;
       } else {
         alert("Analysis Error: " + (data.message || "Analysis failed on server"));
@@ -232,6 +355,9 @@ class SocPlatformApp {
     const forensic = dossier.forensic_investigation || {};
     const ai = dossier.ai_synthesis || {};
 
+    // 0. Render End-User Summary (Plain English assessment for employees & non-technical users)
+    this.renderEndUserSummary(dossier);
+
     // 1. Render Module 1: Threat Detection
     this.renderThreatModule(ident, threat, parsed);
 
@@ -245,6 +371,196 @@ class SocPlatformApp {
 
     // 4. Render Module 4: Unified SOC Investigation Report
     this.renderUnifiedReport(dossier);
+  }
+
+  renderEndUserSummary(dossier) {
+    const summary = dossier.end_user_summary || {};
+    const parsed = dossier.parsed_email || {};
+    const ident = parsed.identity || {};
+    const originMta = dossier.forensic_investigation?.origin_mta || {};
+
+    // 1. Hero Card styling and headline
+    const heroCard = document.getElementById('simple-hero-card');
+    const bigIcon = document.getElementById('simple-big-icon');
+    const headline = document.getElementById('simple-verdict-headline');
+    const subtitle = document.getElementById('simple-verdict-subtitle');
+    const badge = document.getElementById('simple-verdict-badge');
+    const subject = document.getElementById('simple-subject-text');
+    const recBox = document.getElementById('simple-recommendation-box');
+
+    const color = summary.risk_color || (summary.is_safe ? 'safe' : (summary.risk_score >= 70 ? 'danger' : 'caution'));
+
+    if (heroCard) {
+      heroCard.className = `enduser-hero-card ${color}`;
+    }
+
+    if (bigIcon) {
+      bigIcon.textContent = summary.is_safe ? '✅' : (summary.risk_score >= 70 ? '🚨' : '⚠️');
+    }
+
+    if (headline) {
+      headline.textContent = summary.verdict_headline || (summary.is_safe ? 'This email appears safe to read' : 'This email appears suspicious');
+    }
+
+    if (subtitle) {
+      subtitle.textContent = summary.verdict_subtitle || '';
+    }
+
+    if (badge) {
+      badge.textContent = summary.risk_badge ? summary.risk_badge.toUpperCase() : `${summary.risk_score || 0}/100`;
+    }
+
+    if (subject) {
+      subject.textContent = ident.subject ? `Subject: ${ident.subject}` : 'No Subject';
+    }
+
+    if (recBox) {
+      recBox.innerHTML = `
+        <span style="font-size: 16px; margin-right: 4px;">${summary.is_safe ? '🛡️' : '🚫'}</span>
+        <span>${this.escapeHtml(summary.recommendation || '')}</span>
+      `;
+    }
+
+    // 2. Why is it suspicious? (Plain English Reasons)
+    const reasonsContainer = document.getElementById('simple-reasons-container');
+    if (reasonsContainer) {
+      const reasons = summary.plain_reasons || [];
+      if (reasons.length === 0) {
+        reasonsContainer.innerHTML = `<div class="plain-reason-card"><span class="reason-bullet-icon" style="color:var(--emerald-core);">&#10003;</span><span>No suspicious patterns detected.</span></div>`;
+      } else {
+        reasonsContainer.innerHTML = reasons.map(r => `
+          <div class="plain-reason-card">
+            <span class="reason-bullet-icon" style="color: ${summary.is_safe ? 'var(--emerald-core)' : 'var(--crimson-core)'};">
+              ${summary.is_safe ? '&#10003;' : '&#8226;'}
+            </span>
+            <span>${this.escapeHtml(r)}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 3. What should I do? (Action Items)
+    const actionsContainer = document.getElementById('simple-actions-container');
+    if (actionsContainer) {
+      const actions = summary.action_checklist || [];
+      actionsContainer.innerHTML = actions.map(act => {
+        let badgeClass = 'info';
+        let badgeLabel = 'INFO';
+        if (act.type === 'dont') { badgeClass = 'dont'; badgeLabel = 'DO NOT'; }
+        else if (act.type === 'do') { badgeClass = 'do'; badgeLabel = 'SAFE'; }
+        else if (act.type === 'report') { badgeClass = 'report'; badgeLabel = 'ACTION'; }
+
+        return `
+          <div class="action-checklist-item">
+            <span class="action-badge ${badgeClass}">${badgeLabel}</span>
+            <span style="color: ${act.type === 'dont' ? '#fecdd3' : '#ffffff'};">${this.escapeHtml(act.text)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 4. Who does it appear to come from? (Identity Breakdown)
+    const identBreakdown = summary.identity_breakdown || {};
+    const nameEl = document.getElementById('simple-ident-name');
+    const emailEl = document.getElementById('simple-ident-email');
+    const replyToRow = document.getElementById('simple-ident-replyto-row');
+    const replyToEl = document.getElementById('simple-ident-replyto');
+    const expText = document.getElementById('simple-ident-exp-text');
+
+    if (nameEl) nameEl.textContent = identBreakdown.displayed_name || ident.from_name || '(None)';
+    if (emailEl) emailEl.textContent = identBreakdown.actual_email || ident.from_email || '(None)';
+
+    if (replyToRow && replyToEl) {
+      if (identBreakdown.reply_to) {
+        replyToRow.style.display = 'flex';
+        replyToEl.textContent = identBreakdown.reply_to;
+      } else {
+        replyToRow.style.display = 'none';
+      }
+    }
+
+    if (expText) {
+      expText.textContent = identBreakdown.plain_explanation || 'Sender identity evaluated.';
+    }
+
+    // 5. Where did the email come through? (Transit Journey)
+    const journeyContainer = document.getElementById('simple-journey-container');
+    const journeySummary = document.getElementById('simple-journey-summary');
+    const journeyData = summary.simplified_journey || {};
+
+    if (journeyContainer) {
+      const stages = journeyData.stages || [];
+      journeyContainer.innerHTML = `
+        <div class="simple-journey-flow">
+          ${stages.map((st, i) => `
+            <div class="journey-step-box ${st.status === 'warning' ? 'warning' : ''}">
+              <div class="journey-step-num">Step ${st.step}</div>
+              <div class="journey-step-title">${this.escapeHtml(st.title)}</div>
+              <div class="journey-step-desc">${this.escapeHtml(st.desc)}</div>
+            </div>
+            ${i < stages.length - 1 ? '<div class="journey-arrow">&rarr;</div>' : ''}
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (journeySummary) {
+      journeySummary.textContent = journeyData.summary || '';
+    }
+
+    // 6. Related Suspicious Activity
+    const activityText = document.getElementById('simple-activity-text');
+    if (activityText) {
+      activityText.textContent = summary.related_activity || 'No related campaigns found.';
+    }
+
+    // 7. Progressive Disclosure Technical Panel
+    const techAuthMatrix = document.getElementById('simple-tech-auth-matrix');
+    if (techAuthMatrix) {
+      const auth = dossier.threat_detection?.auth_analysis || {};
+      techAuthMatrix.innerHTML = `
+        <div class="auth-box">
+          <div class="auth-title">SPF</div>
+          <div class="auth-badge ${auth.spf?.is_pass ? 'pass' : (auth.spf?.status === 'FAIL' ? 'fail' : 'unknown')}">
+            ${auth.spf?.status || 'UNKNOWN'}
+          </div>
+          <div class="auth-desc">${this.escapeHtml(auth.spf?.detail || '')}</div>
+        </div>
+        <div class="auth-box">
+          <div class="auth-title">DKIM</div>
+          <div class="auth-badge ${auth.dkim?.is_pass ? 'pass' : (auth.dkim?.status === 'FAIL' ? 'fail' : 'unknown')}">
+            ${auth.dkim?.status || 'UNKNOWN'}
+          </div>
+          <div class="auth-desc">${this.escapeHtml(auth.dkim?.detail || '')}</div>
+        </div>
+        <div class="auth-box">
+          <div class="auth-title">DMARC</div>
+          <div class="auth-badge ${auth.dmarc?.is_pass ? 'pass' : (auth.dmarc?.status === 'FAIL' ? 'fail' : 'unknown')}">
+            ${auth.dmarc?.status || 'UNKNOWN'}
+          </div>
+          <div class="auth-desc">${this.escapeHtml(auth.dmarc?.detail || '')}</div>
+        </div>
+      `;
+    }
+
+    const techOriginBox = document.getElementById('simple-tech-origin-box');
+    if (techOriginBox) {
+      techOriginBox.innerHTML = `
+        <div style="font-size: 12px; line-height: 1.6;">
+          <div><strong style="color: var(--cyan-core);">Ingress IP:</strong> <span style="font-family: var(--text-mono);">${this.escapeHtml(originMta.ip || 'N/A')}</span></div>
+          <div><strong style="color: var(--violet-core);">Location:</strong> ${this.escapeHtml(originMta.city || '?')}, ${this.escapeHtml(originMta.country || '?')}</div>
+          <div><strong style="color: var(--amber-core);">Autonomous System:</strong> ${this.escapeHtml(originMta.asn || 'N/A')} (${this.escapeHtml(originMta.isp || originMta.org || 'N/A')})</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-style: italic;">
+            Observed sending infrastructure location does not necessarily represent the physical location of the attacker.
+          </div>
+        </div>
+      `;
+    }
+
+    const rawHeadersPre = document.getElementById('simple-raw-headers-pre');
+    if (rawHeadersPre) {
+      rawHeadersPre.textContent = dossier.raw_eml || 'No raw headers available.';
+    }
   }
 
   renderThreatModule(ident, threat, parsed) {
@@ -676,7 +992,7 @@ class SocPlatformApp {
       const data = await res.json();
       if (data.status === 'success') {
         this.renderCase(data.case);
-        this.switchTab('threat');
+        this.switchTab(this.viewMode === 'soc' ? 'threat' : 'simple');
       }
     } catch (err) {
       console.error(err);
@@ -1023,7 +1339,7 @@ class SocPlatformApp {
       const data = await res.json();
       if (data.status === 'success' && data.dossier) {
         this.renderCase(data.dossier);
-        this.switchTab('threat');
+        this.switchTab(this.viewMode === 'soc' ? 'threat' : 'simple');
         await this.refreshDashboardMetrics();
         await this.loadRecentCases();
       } else {

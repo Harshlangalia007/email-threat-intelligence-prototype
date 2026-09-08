@@ -17,6 +17,7 @@ from engine.ai_provider import AIProviderManager
 from engine.samples import SAMPLE_EMAILS, get_all_samples, get_sample_by_id
 from engine.case_store import CaseStore
 from engine.mailbox import MailboxManager
+from engine.human_summary import UserFriendlySummaryGenerator
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -43,6 +44,7 @@ def seed_initial_samples():
                 threat = threat_detector.analyze(parsed)
                 forensic = forensic_investigator.investigate(parsed)
                 ai_rep = ai_manager.analyze(parsed, threat, forensic)
+                user_summary = UserFriendlySummaryGenerator.generate_summary(parsed, threat, forensic)
                 
                 case_id = f"CASE-SEED-{sample_key.upper()}"
                 graph = graph_engine.build_email_graph(case_id, parsed, threat, forensic)
@@ -57,6 +59,7 @@ def seed_initial_samples():
                     "parsed_email": parsed,
                     "threat_detection": threat,
                     "forensic_investigation": forensic,
+                    "end_user_summary": user_summary,
                     "ai_synthesis": ai_rep,
                     "graph_data": graph
                 }
@@ -138,6 +141,7 @@ def analyze_email():
         graph_data = graph_engine.build_email_graph(case_id, parsed, threat_data, forensic_data)
 
         # Step 6: Assemble Complete Dossier
+        user_summary = UserFriendlySummaryGenerator.generate_summary(parsed, threat_data, forensic_data)
         dossier = {
             "case_id": case_id,
             "source_type": source_type,
@@ -147,6 +151,7 @@ def analyze_email():
             "parsed_email": parsed,
             "threat_detection": threat_data,
             "forensic_investigation": forensic_data,
+            "end_user_summary": user_summary,
             "ai_synthesis": ai_synthesis,
             "graph_data": graph_data
         }
@@ -180,6 +185,12 @@ def get_case(case_id):
     case = case_store.get_case(case_id)
     if not case:
         return jsonify({"status": "error", "message": "Case not found"}), 404
+    if "end_user_summary" not in case:
+        case["end_user_summary"] = UserFriendlySummaryGenerator.generate_summary(
+            case.get("parsed_email", {}),
+            case.get("threat_detection", {}),
+            case.get("forensic_investigation", {})
+        )
     return jsonify({"status": "success", "case": case})
 
 
@@ -290,6 +301,7 @@ def mailbox_analyze_message():
         graph_data = graph_engine.build_email_graph(case_id, parsed, threat_data, forensic_data)
 
         # Step 7: Assemble Complete Dossier
+        user_summary = UserFriendlySummaryGenerator.generate_summary(parsed, threat_data, forensic_data)
         dossier = {
             "case_id": case_id,
             "source_type": f"mailbox_{mailbox_manager.active_provider or 'direct'}",
@@ -300,6 +312,7 @@ def mailbox_analyze_message():
             "parsed_email": parsed,
             "threat_detection": threat_data,
             "forensic_investigation": forensic_data,
+            "end_user_summary": user_summary,
             "ai_synthesis": ai_synthesis,
             "graph_data": graph_data
         }
